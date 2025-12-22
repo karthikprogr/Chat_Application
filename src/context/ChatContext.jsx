@@ -1,0 +1,485 @@
+import { createContext, useContext, useState, useEffect } from 'react'
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  orderBy, 
+  onSnapshot,
+  serverTimestamp,
+  doc,
+  setDoc,
+  getDocs,
+  where,
+  limit
+} from 'firebase/firestore'
+import { db } from '../firebase/config'
+import { useAuth } from './AuthContext'
+import { toast } from 'react-toastify'
+
+const ChatContext = createContext()
+
+export const useChat = () => {
+  const context = useContext(ChatContext)
+  if (!context) {
+    throw new Error('useChat must be used within a ChatProvider')
+  }
+  return context
+}
+
+export const ChatProvider = ({ children }) => {
+  const { currentUser } = useAuth()
+  const [rooms, setRooms] = useState([])
+  const [currentRoom, setCurrentRoom] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [typingUsers, setTypingUsers] = useState({})
+  const [activeUsers, setActiveUsers] = useState([])
+  const [loadingRooms, setLoadingRooms] = useState(true)
+  const [loadingMessages, setLoadingMessages] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  // Load chat rooms (only rooms where user is a member)
+  useEffect(() => {
+    if (!currentUser) {
+      setRooms([])
+      setLoadingRooms(false)
+      return
+    }
+
+    const roomsRef = collection(db, 'rooms')
+    const q = query(roomsRef, where('members', 'array-contains', currentUser.uid), orderBy('createdAt', 'desc'))
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const roomsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      setRooms(roomsData)
+      setLoadingRooms(false)
+
+      // Auto-select first room if none selected
+      if (!currentRoom && roomsData.length > 0) {
+        setCurrentRoom(roomsData[0])
+      }
+    }, (error) => {
+      console.error('Error loading rooms:', error)
+      toast.error('Failed to load chat rooms')
+      setLoadingRooms(false)
+    })
+
+    return unsubscribe
+  }, [currentUser])
+
+  // Load messages for current room
+  useEffect(() => {
+    if (!currentRoom) {
+      setMessages([])
+      return
+    }
+
+    setLoadingMessages(true)
+    const messagesRef = collection(db, 'rooms', currentRoom.id, 'messages')
+    const q = query(messagesRef, orderBy('createdAt', 'asc'))
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      setMessages(messagesData)
+      setLoadingMessages(false)
+    }, (error) => {
+      console.error('Error loading messages:', error)
+      toast.error('Failed to load messages')
+      setLoadingMessages(false)
+    })
+
+    return unsubscribe
+  }, [currentRoom])
+
+  // Track active users in current room
+  useEffect(() => {
+    if (!currentRoom || !currentUser) {
+      setActiveUsers([])
+      return
+    }
+
+    const activeUsersRef = collection(db, 'rooms', currentRoom.id, 'activeUsers')
+    
+    // Add current user as active
+    const userRef = doc(db, 'rooms', currentRoom.id, 'activeUsers', currentUser.uid)
+    setDoc(userRef, {
+      userName: currentUser.displayName,
+      userPhoto: currentUser.photoURL,
+      joinedAt: serverTimestamp(),
+      lastSeen: serverTimestamp()
+    }).catch(err => console.error('Error setting active user:', err))
+
+    // Send join message
+    const messagesRef = collection(db, 'rooms', currentRoom.id, 'messages')
+    addDoc(messagesRef, {
+      type: 'system',
+      action: 'joined',
+      userName: currentUser.displayName,
+      createdAt: serverTimestamp()
+    }).catch(err => console.error('Error sending join message:', err))
+
+    // Listen to active users
+    const q = query(activeUsersRef, orderBy('joinedAt', 'desc'))
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const users = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      setActiveUsers(users)
+    })
+
+    // Cleanup: Send leave message and remove from active users only if not logging out
+    return () => {
+      // Check if user is logging out via session storage flag
+      const loggingOut = sessionStorage.getItem('isLoggingOut') === 'true'
+      
+      if (!loggingOut) {
+        addDoc(messagesRef, {
+          type: 'system',
+          action: 'left',
+          userName: currentUser.displayName,
+          createdAt: serverTimestamp()
+        }).catch(err => console.error('Error sending leave message:', err))
+
+        setDoc(userRef, {
+          userName: currentUser.displayName,
+          userPhoto: currentUser.photoURL,
+          leftAt: serverTimestamp()
+        }, { merge: true }).catch(err => console.error('Error updating user status:', err))
+      }
+
+      unsubscribe()
+    }
+  }, [currentRoom, currentUser])
+
+  // Generate unique invite code
+  const generateInviteCode = () => {
+    return Math.random().toString(36).substring(2, 10).toUpperCase()
+  }
+
+  // Create a new room
+  const createRoom = async (roomName, description = '', isPrivate = true) => {
+    if (!currentUser) {
+      toast.error('You must be logged in to create a room')
+      return
+    }
+
+    if (!roomName.trim()) {
+      toast.error('Room name is required')
+      return
+    }
+
+    try {
+      const inviteCode = generateInviteCode()
+      const roomsRef = collection(db, 'rooms')
+      const newRoom = await addDoc(roomsRef, {
+        name: roomName.trim(),
+        description: description.trim(),
+        createdBy: currentUser.uid,
+        createdByName: currentUser.displayName,
+        createdAt: serverTimestamp(),
+        isPrivate: isPrivate,
+        inviteCode: inviteCode,
+        members: [currentUser.uid],
+        admins: [currentUser.uid],
+        memberCount: 1
+      })
+
+      toast.success(`Room created! Invite code: ${inviteCode}`)
+      
+      // Switch to the new room
+      setCurrentRoom({
+        id: newRoom.id,
+        name: roomName,
+        description,
+        createdBy: currentUser.uid,
+        createdByName: currentUser.displayName,
+        isPrivate,
+        inviteCode,
+        members: [currentUser.uid],
+        admins: [currentUser.uid]
+      })
+
+      return newRoom.id
+    } catch (error) {
+      console.error('Error creating room:', error)
+      toast.error('Failed to create room')
+      throw error
+    }
+  }
+
+  // Join room with invite code
+  const joinRoomWithCode = async (inviteCode) => {
+    if (!currentUser) {
+      toast.error('You must be logged in to join a room')
+      return
+    }
+
+    if (!inviteCode.trim()) {
+      toast.error('Invite code is required')
+      return
+    }
+
+    try {
+      // Find room by invite code
+      const roomsRef = collection(db, 'rooms')
+      const q = query(roomsRef, where('inviteCode', '==', inviteCode.trim().toUpperCase()))
+      const snapshot = await getDocs(q)
+
+      if (snapshot.empty) {
+        toast.error('Invalid invite code')
+        return
+      }
+
+      const roomDoc = snapshot.docs[0]
+      const roomData = roomDoc.data()
+      const roomId = roomDoc.id
+
+      // Check if already a member
+      if (roomData.members && roomData.members.includes(currentUser.uid)) {
+        toast.info('You are already a member of this room')
+        setCurrentRoom({ id: roomId, ...roomData })
+        return
+      }
+
+      // If private room, create join request
+      if (roomData.isPrivate) {
+        const requestsRef = collection(db, 'rooms', roomId, 'joinRequests')
+        const requestQuery = query(requestsRef, where('userId', '==', currentUser.uid))
+        const existingRequest = await getDocs(requestQuery)
+
+        if (!existingRequest.empty) {
+          toast.info('Your join request is pending approval')
+          return
+        }
+
+        await addDoc(requestsRef, {
+          userId: currentUser.uid,
+          userName: currentUser.displayName,
+          userPhoto: currentUser.photoURL,
+          status: 'pending',
+          requestedAt: serverTimestamp()
+        })
+
+        toast.success('Join request sent! Waiting for admin approval.')
+        return
+      }
+
+      // If public room, join directly
+      const roomRef = doc(db, 'rooms', roomId)
+      await updateDoc(roomRef, {
+        members: [...(roomData.members || []), currentUser.uid],
+        memberCount: (roomData.memberCount || 0) + 1
+      })
+
+      toast.success('Joined room successfully!')
+      setCurrentRoom({ id: roomId, ...roomData, members: [...(roomData.members || []), currentUser.uid] })
+    } catch (error) {
+      console.error('Error joining room:', error)
+      toast.error('Failed to join room')
+      throw error
+    }
+  }
+
+  // Approve join request
+  const approveJoinRequest = async (roomId, requestId, userId) => {
+    if (!currentUser) return
+
+    try {
+      const roomRef = doc(db, 'rooms', roomId)
+      const roomSnap = await getDoc(roomRef)
+      
+      if (!roomSnap.exists()) {
+        toast.error('Room not found')
+        return
+      }
+
+      const roomData = roomSnap.data()
+
+      // Check if current user is admin
+      if (!roomData.admins || !roomData.admins.includes(currentUser.uid)) {
+        toast.error('Only admins can approve requests')
+        return
+      }
+
+      // Add user to members
+      await updateDoc(roomRef, {
+        members: [...(roomData.members || []), userId],
+        memberCount: (roomData.memberCount || 0) + 1
+      })
+
+      // Update request status
+      const requestRef = doc(db, 'rooms', roomId, 'joinRequests', requestId)
+      await updateDoc(requestRef, {
+        status: 'approved',
+        approvedBy: currentUser.uid,
+        approvedAt: serverTimestamp()
+      })
+
+      toast.success('Join request approved!')
+    } catch (error) {
+      console.error('Error approving request:', error)
+      toast.error('Failed to approve request')
+    }
+  }
+
+  // Reject join request
+  const rejectJoinRequest = async (roomId, requestId) => {
+    if (!currentUser) return
+
+    try {
+      const roomRef = doc(db, 'rooms', roomId)
+      const roomSnap = await getDoc(roomRef)
+      
+      if (!roomSnap.exists()) {
+        toast.error('Room not found')
+        return
+      }
+
+      const roomData = roomSnap.data()
+
+      // Check if current user is admin
+      if (!roomData.admins || !roomData.admins.includes(currentUser.uid)) {
+        toast.error('Only admins can reject requests')
+        return
+      }
+
+      // Update request status
+      const requestRef = doc(db, 'rooms', roomId, 'joinRequests', requestId)
+      await updateDoc(requestRef, {
+        status: 'rejected',
+        rejectedBy: currentUser.uid,
+        rejectedAt: serverTimestamp()
+      })
+
+      toast.success('Join request rejected')
+    } catch (error) {
+      console.error('Error rejecting request:', error)
+      toast.error('Failed to reject request')
+    }
+  }
+
+  // Search rooms
+  const searchRooms = async (searchTerm) => {
+    if (!searchTerm.trim()) {
+      return []
+    }
+
+    try {
+      const roomsRef = collection(db, 'rooms')
+      const snapshot = await getDocs(roomsRef)
+      
+      const results = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(room => 
+          room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          room.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .slice(0, 10) // Limit to 10 results
+
+      return results
+    } catch (error) {
+      console.error('Error searching rooms:', error)
+      toast.error('Failed to search rooms')
+      return []
+    }
+  }
+
+  // Send a message
+  const sendMessage = async (text, roomId = currentRoom?.id) => {
+    if (!currentUser) {
+      toast.error('You must be logged in to send messages')
+      return
+    }
+
+    if (!roomId) {
+      toast.error('Please select a room first')
+      return
+    }
+
+    if (!text.trim()) {
+      return
+    }
+
+    try {
+      const messagesRef = collection(db, 'rooms', roomId, 'messages')
+      await addDoc(messagesRef, {
+        text: text.trim(),
+        userId: currentUser.uid,
+        userName: currentUser.displayName,
+        userPhoto: currentUser.photoURL,
+        createdAt: serverTimestamp()
+      })
+
+      // Update room's last message time
+      const roomRef = doc(db, 'rooms', roomId)
+      await setDoc(roomRef, {
+        lastMessage: text.trim().substring(0, 50),
+        lastMessageAt: serverTimestamp(),
+        lastMessageBy: currentUser.displayName
+      }, { merge: true })
+
+    } catch (error) {
+      console.error('Error sending message:', error)
+      toast.error('Failed to send message')
+      throw error
+    }
+  }
+
+  // Set typing status
+  const setTyping = async (isTyping, roomId = currentRoom?.id) => {
+    if (!currentUser || !roomId) return
+
+    try {
+      const typingRef = doc(db, 'rooms', roomId, 'typing', currentUser.uid)
+      
+      if (isTyping) {
+        await setDoc(typingRef, {
+          userName: currentUser.displayName,
+          timestamp: serverTimestamp()
+        })
+      } else {
+        await setDoc(typingRef, {
+          userName: currentUser.displayName,
+          timestamp: null
+        })
+      }
+    } catch (error) {
+      console.error('Error setting typing status:', error)
+    }
+  }
+
+  // Join a room
+  const joinRoom = (room) => {
+    setCurrentRoom(room)
+  }
+
+  const value = {
+    rooms,
+    currentRoom,
+    messages,
+    typingUsers,
+    activeUsers,
+    loadingRooms,
+    loadingMessages,
+    createRoom,
+    sendMessage,
+    setTyping,
+    joinRoom,
+    joinRoomWithCode,
+    approveJoinRequest,
+    rejectJoinRequest,
+    searchRooms
+  }
+
+  return (
+    <ChatContext.Provider value={value}>
+      {children}
+    </ChatContext.Provider>
+  )
+}
