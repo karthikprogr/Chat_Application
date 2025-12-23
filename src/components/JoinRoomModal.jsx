@@ -48,9 +48,19 @@ const JoinRoomModal = ({ onClose }) => {
   }
 
   const handleJoinFromSearch = async (room) => {
-    if (room.inviteCode) {
-      setInviteCode(room.inviteCode)
-      setSearchMode(false)
+    if (!room.inviteCode) {
+      toast.error('Room has no invite code')
+      return
+    }
+    
+    setLoading(true)
+    try {
+      await joinRoomWithCode(room.inviteCode)
+      onClose()
+    } catch (error) {
+      console.error('Failed to join room:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -186,9 +196,10 @@ const JoinRoomModal = ({ onClose }) => {
                         </div>
                         <button
                           onClick={() => handleJoinFromSearch(room)}
-                          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                          disabled={loading}
+                          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
                         >
-                          Use Code
+                          {loading ? '...' : room.isPrivate ? 'Request Join' : 'Join Now'}
                         </button>
                       </div>
                     </div>

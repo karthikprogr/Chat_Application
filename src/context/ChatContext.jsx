@@ -374,16 +374,27 @@ export const ChatProvider = ({ children }) => {
       return []
     }
 
+    if (!currentUser) {
+      toast.error('You must be logged in to search rooms')
+      return []
+    }
+
     try {
       const roomsRef = collection(db, 'rooms')
       const snapshot = await getDocs(roomsRef)
       
       const results = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(room => 
-          room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          room.description?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        .filter(room => {
+          // Filter by search term
+          const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            room.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          
+          // Don't show rooms user is already a member of
+          const isNotMember = !room.members || !room.members.includes(currentUser.uid)
+          
+          return matchesSearch && isNotMember
+        })
         .slice(0, 10) // Limit to 10 results
 
       return results

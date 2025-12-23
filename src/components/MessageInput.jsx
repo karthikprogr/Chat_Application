@@ -32,14 +32,18 @@ const MessageInput = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!message.trim()) return
+    
+    const messageToSend = message.trim()
+    setMessage('') // Clear immediately for better UX
+    setIsTyping(false)
+    setTyping(false)
+    
     try {
-      await sendMessage(message)
-      setMessage('')
-      setIsTyping(false)
-      setTyping(false)
+      await sendMessage(messageToSend)
       inputRef.current?.focus()
     } catch (error) {
       console.error('Failed to send message:', error)
+      setMessage(messageToSend) // Restore message on failure
     }
   }
 
