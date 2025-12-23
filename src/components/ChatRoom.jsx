@@ -14,11 +14,13 @@ const ChatRoom = () => {
   const { currentRoom, messages, loadingMessages, activeUsers } = useChat()
   const { currentUser } = useAuth()
   const messagesEndRef = useRef(null)
+  const messagesContainerRef = useRef(null)
   const [showInfo, setShowInfo] = useState(false)
   const [showActiveUsers, setShowActiveUsers] = useState(false)
   const [showJoinRequests, setShowJoinRequests] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const prevMessagesLength = useRef(messages.length)
+  const shouldAutoScroll = useRef(true)
 
   const isAdmin = currentRoom?.admins?.includes(currentUser?.uid)
 
@@ -81,11 +83,25 @@ const ChatRoom = () => {
   }, [])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    if (messages.length > prevMessagesLength.current) {
+      const lastMessage = messages[messages.length - 1]
+      // Auto-scroll if it's user's own message or if user is already at bottom
+      if (lastMessage?.userId === currentUser?.uid || shouldAutoScroll.current) {
+        scrollToBottom()
+      }
+    }
+    prevMessagesLength.current = messages.length
+  }, [messages, currentUser?.uid])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+  }
+
+  // Track if user is at bottom of scroll
+  const handleScroll = (e) => {
+    const container = e.target
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+    shouldAutoScroll.current = isAtBottom
   }
 
   if (!currentRoom) {
@@ -188,7 +204,7 @@ const ChatRoom = () => {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin bg-gradient-to-b from-gray-50 to-white p-4">
+      <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto scrollbar-thin bg-gradient-to-b from-gray-50 to-white p-4">
         {loadingMessages ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
