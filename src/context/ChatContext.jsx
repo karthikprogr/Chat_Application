@@ -8,9 +8,13 @@ import {
   serverTimestamp,
   doc,
   setDoc,
+  getDoc,
   getDocs,
   where,
-  limit
+  limit,
+  updateDoc,
+  arrayUnion,
+  deleteDoc
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { useAuth } from './AuthContext'
