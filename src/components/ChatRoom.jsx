@@ -85,8 +85,11 @@ const ChatRoom = () => {
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       const lastMessage = messages[messages.length - 1]
-      // Auto-scroll if it's user's own message or if user is already at bottom
-      if (lastMessage?.userId === currentUser?.uid || shouldAutoScroll.current) {
+      // Always scroll if it's user's own message
+      if (lastMessage?.userId === currentUser?.uid) {
+        setTimeout(() => scrollToBottom(), 0)
+      } else if (shouldAutoScroll.current) {
+        // Only scroll for others' messages if user is at bottom
         scrollToBottom()
       }
     }
@@ -94,7 +97,9 @@ const ChatRoom = () => {
   }, [messages, currentUser?.uid])
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' })
+    }
   }
 
   // Track if user is at bottom of scroll
