@@ -409,12 +409,12 @@ export const ChatProvider = ({ children }) => {
   const sendMessage = async (text, roomId = currentRoom?.id) => {
     if (!currentUser) {
       toast.error('You must be logged in to send messages')
-      return
+      throw new Error('Not authenticated')
     }
 
     if (!roomId) {
       toast.error('Please select a room first')
-      return
+      throw new Error('No room selected')
     }
 
     if (!text.trim()) {
@@ -422,6 +422,7 @@ export const ChatProvider = ({ children }) => {
     }
 
     try {
+      // Send message to messages subcollection
       const messagesRef = collection(db, 'rooms', roomId, 'messages')
       await addDoc(messagesRef, {
         text: text.trim(),
@@ -431,13 +432,18 @@ export const ChatProvider = ({ children }) => {
         createdAt: serverTimestamp()
       })
 
-      // Update room's last message time
-      const roomRef = doc(db, 'rooms', roomId)
-      await setDoc(roomRef, {
-        lastMessage: text.trim().substring(0, 50),
-        lastMessageAt: serverTimestamp(),
-        lastMessageBy: currentUser.displayName
-      }, { merge: true })
+      // Try to update room's last message (don't fail if this doesn't work)
+      try {
+        const roomRef = doc(db, 'rooms', roomId)
+        await setDoc(roomRef, {
+          lastMessage: text.trim().substring(0, 50),
+          lastMessageAt: serverTimestamp(),
+          lastMessageBy: currentUser.displayName
+        }, { merge: true })
+      } catch (updateError) {
+        // Silently fail - message was sent successfully, room update is not critical
+        console.log('Could not update room lastMessage:', updateError)
+      }
 
     } catch (error) {
       console.error('Error sending message:', error)
