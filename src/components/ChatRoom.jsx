@@ -87,7 +87,12 @@ const ChatRoom = () => {
       const lastMessage = messages[messages.length - 1]
       // Always scroll if it's user's own message
       if (lastMessage?.userId === currentUser?.uid) {
-        setTimeout(() => scrollToBottom(), 0)
+        // Use requestAnimationFrame for smooth instant scroll
+        requestAnimationFrame(() => {
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'nearest' })
+          }
+        })
       } else if (shouldAutoScroll.current) {
         // Only scroll for others' messages if user is at bottom
         scrollToBottom()
@@ -98,7 +103,7 @@ const ChatRoom = () => {
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' })
+      messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'nearest' })
     }
   }
 
