@@ -118,15 +118,6 @@ export const ChatProvider = ({ children }) => {
       lastSeen: serverTimestamp()
     }).catch(err => console.error('Error setting active user:', err))
 
-    // Send join message
-    const messagesRef = collection(db, 'rooms', currentRoom.id, 'messages')
-    addDoc(messagesRef, {
-      type: 'system',
-      action: 'joined',
-      userName: currentUser.displayName,
-      createdAt: serverTimestamp()
-    }).catch(err => console.error('Error sending join message:', err))
-
     // Listen to active users
     const q = query(activeUsersRef, orderBy('joinedAt', 'desc'))
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -137,25 +128,13 @@ export const ChatProvider = ({ children }) => {
       setActiveUsers(users)
     })
 
-    // Cleanup: Send leave message and remove from active users only if not logging out
+    // Cleanup: Remove from active users
     return () => {
-      // Check if user is logging out via session storage flag
-      const loggingOut = sessionStorage.getItem('isLoggingOut') === 'true'
-      
-      if (!loggingOut) {
-        addDoc(messagesRef, {
-          type: 'system',
-          action: 'left',
-          userName: currentUser.displayName,
-          createdAt: serverTimestamp()
-        }).catch(err => console.error('Error sending leave message:', err))
-
-        setDoc(userRef, {
-          userName: currentUser.displayName,
-          userPhoto: currentUser.photoURL,
-          leftAt: serverTimestamp()
-        }, { merge: true }).catch(err => console.error('Error updating user status:', err))
-      }
+      setDoc(userRef, {
+        userName: currentUser.displayName,
+        userPhoto: currentUser.photoURL,
+        leftAt: serverTimestamp()
+      }, { merge: true }).catch(err => console.error('Error updating user status:', err))
 
       unsubscribe()
     }
