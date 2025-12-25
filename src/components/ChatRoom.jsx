@@ -552,8 +552,9 @@ const ChatRoom = () => {
               return (
                 <div key={message.id}>
                   {showDateSeparator && (
-                    <div className=\"flex justify-center my-4\">
-                      <div className=\"bg-gray-800/80 backdrop-blur-sm text-gray-300 text-xs px-3 py-1.5 rounded-md shadow-lg\">\n                        {dateLabel}
+                    <div className="flex justify-center my-4">
+                      <div className="bg-gray-800/80 backdrop-blur-sm text-gray-300 text-xs px-3 py-1.5 rounded-md shadow-lg">
+                        {dateLabel}
                       </div>
                     </div>
                   )}
