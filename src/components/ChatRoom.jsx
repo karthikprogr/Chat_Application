@@ -97,27 +97,23 @@ const ChatRoom = () => {
         // Only scroll for others' messages if user is at bottom
         scrollToBottom()
       }
-    } else if (prevMessagesLength.current === 0 && messages.length > 0) {
-      // Initial load - scroll to bottom immediately
-      requestAnimationFrame(() => {
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
-        }
-      })
     }
     prevMessagesLength.current = messages.length
   }, [messages, currentUser?.uid])
 
-  // Also scroll to bottom when room changes
+  // Scroll to bottom on initial load and room change
   useEffect(() => {
-    if (currentRoom && messagesContainerRef.current) {
-      requestAnimationFrame(() => {
+    if (messages.length > 0 && messagesContainerRef.current) {
+      // Wait for DOM to fully render, then scroll to bottom
+      const scrollTimer = setTimeout(() => {
         if (messagesContainerRef.current) {
           messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
         }
-      })
+      }, 50)
+      
+      return () => clearTimeout(scrollTimer)
     }
-  }, [currentRoom?.id])
+  }, [currentRoom?.id, loadingMessages])
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
