@@ -43,7 +43,6 @@ const ChangePassword = () => {
     e.preventDefault()
     setError('')
 
-    // Validation
     if (formData.newPassword.length < 6) {
       setError('New password must be at least 6 characters')
       return
@@ -62,7 +61,6 @@ const ChangePassword = () => {
     setLoading(true)
     try {
       await changePassword(formData.currentPassword, formData.newPassword)
-      // Redirect to chat after success
       setTimeout(() => {
         navigate('/chat')
       }, 1500)
@@ -92,7 +90,6 @@ const ChangePassword = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        {/* Back to Chat Link */}
         <Link 
           to="/chat"
           className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-6 font-medium"
@@ -101,9 +98,7 @@ const ChangePassword = () => {
           Back to Chat
         </Link>
 
-        {/* Card */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl p-8">
-          {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-block p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4">
               <HiLockClosed className="w-8 h-8 text-white" />
@@ -119,9 +114,7 @@ const ChangePassword = () => {
             )}
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Current Password */}
             <div>
               <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-2">
                 Current Password
@@ -155,7 +148,6 @@ const ChangePassword = () => {
               </div>
             </div>
 
-            {/* New Password */}
             <div>
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
                 New Password
@@ -190,7 +182,6 @@ const ChangePassword = () => {
               <p className="mt-1 text-xs text-gray-500">Minimum 6 characters</p>
             </div>
 
-            {/* Confirm Password */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
                 Confirm New Password
@@ -248,7 +239,6 @@ const ChangePassword = () => {
               )}
             </button>
 
-            {/* Forgot Password Link */}
             <div className="text-center mt-4">
               <button
                 type="button"
@@ -262,11 +252,9 @@ const ChangePassword = () => {
         </div>
       </div>
 
-      {/* Reset Password Modal */}
       {showResetModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl max-w-md w-full animate-slide-up">
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-800">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-900 rounded-lg">
@@ -288,7 +276,6 @@ const ChangePassword = () => {
               </button>
             </div>
 
-            {/* Modal Content */}
             <form onSubmit={handleSendResetEmail} className="p-6 space-y-4">
               <div>
                 <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-300 mb-2">
