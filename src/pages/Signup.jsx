@@ -334,7 +334,7 @@ const Signup = () => {
 
         {/* Footer */}
         <p className="mt-8 text-center text-sm text-pink-100">
-          © 2024 ChatApp. Real-time communication made simple.
+          © 2025 ChatApp. Real-time communication made simple.
         </p>
       </div>
     </div>
