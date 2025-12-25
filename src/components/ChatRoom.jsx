@@ -5,10 +5,12 @@ import Message from './Message'
 import MessageInput from './MessageInput'
 import TypingIndicator from './TypingIndicator'
 import JoinRequestsModal from './JoinRequestsModal'
-import { HiUsers, HiInformationCircle, HiUserGroup, HiUserAdd, HiKey, HiClipboardCopy } from 'react-icons/hi'
+import { HiUsers, HiInformationCircle, HiUserGroup, HiUserAdd, HiKey, HiClipboardCopy, HiSearch, HiDotsVertical, HiX } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import { requestNotificationPermission, showNotification, playNotificationSound, updatePageTitle } from '../utils/notifications'
 import { toast } from 'react-toastify'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { db } from '../firebase/config'
 
 const ChatRoom = () => {
   const { currentRoom, messages, loadingMessages, activeUsers } = useChat()
@@ -18,16 +20,73 @@ const ChatRoom = () => {
   const [showInfo, setShowInfo] = useState(false)
   const [showActiveUsers, setShowActiveUsers] = useState(false)
   const [showJoinRequests, setShowJoinRequests] = useState(false)
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [memberNames, setMemberNames] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const prevMessagesLength = useRef(messages.length)
   const shouldAutoScroll = useRef(true)
 
   const isAdmin = currentRoom?.admins?.includes(currentUser?.uid)
 
+  // Fetch member names
+  useEffect(() => {
+    const fetchMemberNames = async () => {
+      if (!currentRoom?.members || currentRoom.members.length === 0) {
+        setMemberNames([])
+        return
+      }
+      
+      try {
+        const usersRef = collection(db, 'users')
+        const usersSnapshot = await getDocs(usersRef)
+        const names = usersSnapshot.docs
+          .filter(doc => currentRoom.members.includes(doc.id))
+          .map(doc => doc.data().displayName || 'Unknown')
+          .slice(0, 3) // Show only first 3 members
+        
+        setMemberNames(names)
+      } catch (error) {
+        console.error('Error fetching member names:', error)
+      }
+    }
+    
+    fetchMemberNames()
+  }, [currentRoom?.id, currentRoom?.members])
+
   const copyInviteCode = () => {
     if (currentRoom?.inviteCode) {
       navigator.clipboard.writeText(currentRoom.inviteCode)
       toast.success('Invite code copied to clipboard!')
+    }
+  }
+
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      return
+    }
+    
+    const results = messages.filter(msg => 
+      msg.text && msg.text.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    setSearchResults(results)
+    
+    if (results.length === 0) {
+      toast.info('No messages found')
+    } else {
+      toast.success(`Found ${results.length} message(s)`)
+    }
+  }
+
+  const scrollToMessage = (messageId) => {
+    const messageElement = document.getElementById(`message-${messageId}`)
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      messageElement.classList.add('highlight-message')
+      setTimeout(() => messageElement.classList.remove('highlight-message'), 2000)
     }
   }
 
@@ -149,33 +208,124 @@ const ChatRoom = () => {
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <h2 className="text-xl font-bold mb-1">{currentRoom.name}</h2>
-            {currentRoom.description && (
-              <p className="text-sm text-blue-100">{currentRoom.description}</p>
+            {memberNames.length > 0 && (
+              <p className="text-sm text-blue-100">
+                {memberNames.join(', ')}{currentRoom.memberCount > 3 ? ` +${currentRoom.memberCount - 3} more` : ''}
+              </p>
             )}
           </div>
           <div className="flex items-center gap-2">
-            {isAdmin && (
-              <button 
-                onClick={() => setShowJoinRequests(true)} 
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors relative"
-                title="Join Requests"
-              >
-                <HiUserAdd className="w-6 h-6" />
-              </button>
-            )}
-            <button onClick={() => setShowActiveUsers(!showActiveUsers)} className="p-2 hover:bg-white/20 rounded-lg transition-colors relative">
-              <HiUserGroup className="w-6 h-6" />
-              {activeUsers.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {activeUsers.length}
-                </span>
-              )}
+            <button 
+              onClick={() => setShowSearch(!showSearch)} 
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              title="Search messages"
+            >
+              <HiSearch className="w-6 h-6" />
             </button>
-            <button onClick={() => setShowInfo(!showInfo)} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
-              <HiInformationCircle className="w-6 h-6" />
+            <button 
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)} 
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors relative"
+              title="Settings"
+            >
+              <HiDotsVertical className="w-6 h-6" />
             </button>
           </div>
         </div>
+        
+        {/* Search Bar */}
+        {showSearch && (
+          <div className="mt-4 animate-slide-up">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="Search messages..."
+                className="flex-1 px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <button
+                onClick={handleSearch}
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              >
+                Search
+              </button>
+              <button
+                onClick={() => {
+                  setShowSearch(false)
+                  setSearchQuery('')
+                  setSearchResults([])
+                }}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <HiX className="w-5 h-5" />
+              </button>
+            </div>
+            {searchResults.length > 0 && (
+              <div className="mt-2 max-h-40 overflow-y-auto bg-white/10 rounded-lg p-2">
+                {searchResults.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => scrollToMessage(msg.id)}
+                    className="p-2 hover:bg-white/20 rounded cursor-pointer text-sm mb-1"
+                  >
+                    <span className="font-semibold">{msg.userName}:</span> {msg.text?.substring(0, 50)}...
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Settings Menu */}
+        {showSettingsMenu && (
+          <div className="absolute right-4 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 animate-slide-up">
+            <div className="py-2">
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setShowJoinRequests(true)
+                    setShowSettingsMenu(false)
+                  }}
+                  className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+                >
+                  <HiUserAdd className="w-5 h-5" />
+                  Join Requests
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setShowActiveUsers(!showActiveUsers)
+                  setShowSettingsMenu(false)
+                }}
+                className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+              >
+                <HiUserGroup className="w-5 h-5" />
+                Active Users ({activeUsers.length})
+              </button>
+              <button
+                onClick={() => {
+                  setShowInfo(!showInfo)
+                  setShowSettingsMenu(false)
+                }}
+                className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+              >
+                <HiInformationCircle className="w-5 h-5" />
+                Group Info
+              </button>
+              <button
+                onClick={() => {
+                  copyInviteCode()
+                  setShowSettingsMenu(false)
+                }}
+                className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+              >
+                <HiClipboardCopy className="w-5 h-5" />
+                Copy Invite Code
+              </button>
+            </div>
+          </div>
+        )}
         {showActiveUsers && (
           <div className="mt-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm animate-slide-up">
             <h3 className="font-semibold mb-3 flex items-center gap-2">

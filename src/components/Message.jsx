@@ -19,7 +19,7 @@ const Message = ({ message, isOwnMessage, showAvatar }) => {
   const formattedText = formatMessage(message.text)
 
   return (
-    <div className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} message-enter`}>
+    <div id={`message-${message.id}`} className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} message-enter`}>
       {showAvatar && (
         <div className="flex-shrink-0">
           {message.userPhoto ? (
