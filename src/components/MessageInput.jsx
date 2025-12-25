@@ -36,7 +36,7 @@ const MessageInput = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!message.trim()) return
+    if (!message.trim() || !canSendMessage) return
     
     const messageToSend = message.trim()
     setMessage('') // Clear immediately for better UX
@@ -48,7 +48,10 @@ const MessageInput = () => {
       inputRef.current?.focus()
     } catch (error) {
       console.error('Failed to send message:', error)
-      setMessage(messageToSend) // Restore message on failure
+      // Only restore message if it wasn't an admin-only restriction
+      if (!error.message?.includes('Admin only')) {
+        setMessage(messageToSend)
+      }
     }
   }
 
