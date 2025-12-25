@@ -39,9 +39,22 @@ service cloud.firestore {
                     && request.resource.data.name.size() <= 50;
       
       allow update: if isAuthenticated() 
-                    && (resource.data.createdBy == request.auth.uid 
+                    && (
+                        // Room creator can update anything
+                        resource.data.createdBy == request.auth.uid 
+                        // Admins can update room settings, members, and admins
+                        || (request.auth.uid in resource.data.admins 
+                            && request.resource.data.diff(resource.data).affectedKeys()
+                               .hasOnly(['members', 'admins', 'memberCount', 'adminOnlyChat', 'lastMessage', 'lastMessageAt', 'lastMessageBy']))
+                        // Members can remove themselves (leave room)
+                        || (request.auth.uid in resource.data.members 
+                            && !request.resource.data.members.hasAll([request.auth.uid])
+                            && request.resource.data.diff(resource.data).affectedKeys()
+                               .hasOnly(['members', 'admins', 'memberCount']))
+                        // Anyone can update last message fields
                         || request.resource.data.diff(resource.data).affectedKeys()
-                           .hasOnly(['lastMessage', 'lastMessageAt', 'lastMessageBy']));
+                           .hasOnly(['lastMessage', 'lastMessageAt', 'lastMessageBy'])
+                    );
       
       allow delete: if false;
       
