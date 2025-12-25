@@ -20,6 +20,8 @@ const ChatRoom = () => {
   const messagesContainerRef = useRef(null)
   const activeUsersRef = useRef(null)
   const groupInfoRef = useRef(null)
+  const settingsMenuRef = useRef(null)
+  const settingsButtonRef = useRef(null)
   const [showInfo, setShowInfo] = useState(false)
   const [showActiveUsers, setShowActiveUsers] = useState(false)
   const [showJoinRequests, setShowJoinRequests] = useState(false)
@@ -183,16 +185,21 @@ const ChatRoom = () => {
           setShowInfo(false)
         }
       }
+      // Check if click is outside Settings Menu
+      if (showSettingsMenu && settingsMenuRef.current && !settingsMenuRef.current.contains(event.target) && 
+          settingsButtonRef.current && !settingsButtonRef.current.contains(event.target)) {
+        setShowSettingsMenu(false)
+      }
     }
 
-    if (showActiveUsers || showInfo) {
+    if (showActiveUsers || showInfo || showSettingsMenu) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showActiveUsers, showInfo])
+  }, [showActiveUsers, showInfo, showSettingsMenu])
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current && prevMessagesLength.current > 0) {
@@ -275,7 +282,8 @@ const ChatRoom = () => {
             >
               <HiSearch className="w-6 h-6" />
             </button>
-            <button 
+            <button
+              ref={settingsButtonRef}
               onClick={() => setShowSettingsMenu(!showSettingsMenu)} 
               className="p-2 hover:bg-white/20 rounded-lg transition-colors relative"
               title="Settings"
@@ -332,7 +340,7 @@ const ChatRoom = () => {
         
         {/* Settings Menu */}
         {showSettingsMenu && (
-          <div className="settings-menu absolute right-4 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 animate-slide-up">
+          <div ref={settingsMenuRef} className="settings-menu absolute right-4 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 animate-slide-up">
             <div className="py-2">
               {isAdmin && (
                 <>
