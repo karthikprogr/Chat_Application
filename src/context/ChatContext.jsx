@@ -81,6 +81,7 @@ export const ChatProvider = ({ children }) => {
       return
     }
 
+    let isInitialLoad = true
     setLoadingMessages(true)
     const messagesRef = collection(db, 'rooms', currentRoom.id, 'messages')
     const q = query(messagesRef, orderBy('createdAt', 'asc'))
@@ -91,7 +92,12 @@ export const ChatProvider = ({ children }) => {
         ...doc.data()
       }))
       setMessages(messagesData)
-      setLoadingMessages(false)
+      
+      // Only set loading to false on initial load
+      if (isInitialLoad) {
+        setLoadingMessages(false)
+        isInitialLoad = false
+      }
     }, (error) => {
       console.error('Error loading messages:', error)
       toast.error('Failed to load messages')
