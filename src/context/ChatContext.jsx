@@ -60,8 +60,8 @@ export const ChatProvider = ({ children }) => {
       setRooms(roomsData)
       setLoadingRooms(false)
 
-      // Auto-select first room if none selected
-      if (!currentRoom && roomsData.length > 0) {
+      // Auto-select first room only on initial load
+      if (!currentRoom && roomsData.length > 0 && snapshot.docChanges().length === roomsData.length) {
         setCurrentRoom(roomsData[0])
       }
     }, (error) => {

@@ -83,27 +83,30 @@ const ChatRoom = () => {
   }, [])
 
   useEffect(() => {
-    if (messages.length > prevMessagesLength.current) {
+    if (messages.length > prevMessagesLength.current && prevMessagesLength.current > 0) {
       const lastMessage = messages[messages.length - 1]
       // Always scroll if it's user's own message
       if (lastMessage?.userId === currentUser?.uid) {
-        // Use requestAnimationFrame for smooth instant scroll
+        // Use requestAnimationFrame for instant scroll to bottom
         requestAnimationFrame(() => {
-          if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'nearest' })
+          if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
           }
         })
       } else if (shouldAutoScroll.current) {
         // Only scroll for others' messages if user is at bottom
         scrollToBottom()
       }
+    } else if (prevMessagesLength.current === 0 && messages.length > 0) {
+      // Initial load - scroll to bottom
+      setTimeout(() => scrollToBottom(), 100)
     }
     prevMessagesLength.current = messages.length
   }, [messages, currentUser?.uid])
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'nearest' })
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
     }
   }
 
