@@ -77,6 +77,7 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     if (!currentRoom) {
       setMessages([])
+      setLoadingMessages(false)
       return
     }
 
@@ -97,8 +98,11 @@ export const ChatProvider = ({ children }) => {
       setLoadingMessages(false)
     })
 
-    return unsubscribe
-  }, [currentRoom])
+    return () => {
+      unsubscribe()
+      setLoadingMessages(false)
+    }
+  }, [currentRoom?.id])
 
   // Track active users in current room
   useEffect(() => {
