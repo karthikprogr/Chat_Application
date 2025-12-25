@@ -13,6 +13,7 @@ const MessageInput = () => {
   const { currentUser } = useAuth()
   const inputRef = useRef(null)
   const typingTimeoutRef = useRef(null)
+  const emojiPickerRef = useRef(null)
 
   const isAdmin = currentRoom?.admins?.includes(currentUser?.uid)
   const canSendMessage = !currentRoom?.adminOnlyChat || isAdmin
@@ -20,6 +21,20 @@ const MessageInput = () => {
   useEffect(() => {
     inputRef.current?.focus()
   }, [currentRoom])
+
+  // Click outside to close emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false)
+      }
+    }
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showEmojiPicker])
 
   const handleChange = (e) => {
     const value = e.target.value
@@ -116,7 +131,7 @@ const MessageInput = () => {
   return (
     <div className="border-t border-gray-800 bg-gray-900 p-4">
       <form onSubmit={handleSubmit} className="flex items-center gap-3">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative" ref={emojiPickerRef}>
           <textarea
             ref={inputRef}
             value={message}
