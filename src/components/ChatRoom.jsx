@@ -489,7 +489,7 @@ const ChatRoom = () => {
         )}
       </div>
 
-      <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto scrollbar-thin bg-gradient-to-b from-gray-800 to-gray-900 p-4">
+      <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto scrollbar-thin p-4" style={{ backgroundColor: '#0b141a', backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 50%)', backgroundSize: '100% 100%' }}>
         {loadingMessages ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -513,12 +513,52 @@ const ChatRoom = () => {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-1">
             {messages.map((message, index) => {
               const isOwnMessage = message.userId === currentUser.uid
               const showAvatar = index === 0 || messages[index - 1].userId !== message.userId
+              
+              // Show date separator if this is the first message or if the date changed
+              let showDateSeparator = false
+              let dateLabel = ''
+              
+              if (message.createdAt) {
+                const currentDate = new Date(message.createdAt.toDate()).toDateString()
+                const previousDate = index > 0 && messages[index - 1].createdAt 
+                  ? new Date(messages[index - 1].createdAt.toDate()).toDateString() 
+                  : null
+                
+                if (index === 0 || currentDate !== previousDate) {
+                  showDateSeparator = true
+                  const msgDate = new Date(message.createdAt.toDate())
+                  const today = new Date()
+                  const yesterday = new Date(today)
+                  yesterday.setDate(yesterday.getDate() - 1)
+                  
+                  if (msgDate.toDateString() === today.toDateString()) {
+                    dateLabel = 'Today'
+                  } else if (msgDate.toDateString() === yesterday.toDateString()) {
+                    dateLabel = 'Yesterday'
+                  } else {
+                    dateLabel = msgDate.toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      day: 'numeric', 
+                      year: msgDate.getFullYear() !== today.getFullYear() ? 'numeric' : undefined 
+                    })
+                  }
+                }
+              }
+              
               return (
-                <Message key={message.id} message={message} isOwnMessage={isOwnMessage} showAvatar={showAvatar} />
+                <div key={message.id}>
+                  {showDateSeparator && (
+                    <div className=\"flex justify-center my-4\">
+                      <div className=\"bg-gray-800/80 backdrop-blur-sm text-gray-300 text-xs px-3 py-1.5 rounded-md shadow-lg\">\n                        {dateLabel}
+                      </div>
+                    </div>
+                  )}
+                  <Message message={message} isOwnMessage={isOwnMessage} showAvatar={showAvatar} />
+                </div>
               )
             })}
             <div ref={messagesEndRef} />

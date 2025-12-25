@@ -68,53 +68,52 @@ const Sidebar = ({ onClose, onCreateRoom }) => {
             </div>
           </div>
         ) : (
-          <div className="p-2">
+          <div>
             {rooms.map((room) => (
               <button
                 key={room.id}
                 onClick={() => handleRoomSelect(room)}
-                className={`w-full text-left p-4 rounded-lg mb-2 transition-all ${
+                className={`w-full text-left p-3 transition-all border-b border-gray-800 ${
                   currentRoom?.id === room.id
-                    ? 'bg-gradient-to-r from-blue-900 to-indigo-900 border-2 border-blue-600'
-                    : 'hover:bg-gray-800 border-2 border-transparent'
+                    ? 'bg-gray-800'
+                    : 'hover:bg-gray-800'
                 }`}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-lg">
+                      {room.name?.[0]?.toUpperCase()}
+                    </div>
+                  </div>
+                  
+                  {/* Chat Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white truncate mb-1">
-                      {room.name}
-                    </h3>
-                    {room.description && (
-                      <p className="text-sm text-gray-400 truncate mb-2">
-                        {room.description}
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-semibold text-white truncate">
+                        {room.name}
+                      </h3>
+                      {room.createdAt && (
+                        <span className="text-xs text-gray-400 ml-2 flex-shrink-0">
+                          {new Date(room.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-400 truncate">
+                        {room.lastMessage ? (
+                          <>{room.lastMessageBy?.split(' ')[0]}: {room.lastMessage}</>
+                        ) : (
+                          room.description || 'No messages yet'
+                        )}
                       </p>
-                    )}
-                    {room.lastMessage && (
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span className="truncate">{room.lastMessageBy}: {room.lastMessage}</span>
-                      </div>
-                    )}
-                  </div>
-                  {currentRoom?.id === room.id && (
-                    <div className="ml-2 flex-shrink-0">
-                      <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"></div>
+                      {room.unreadCount > 0 && (
+                        <span className="ml-2 flex-shrink-0 bg-green-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                          {room.unreadCount > 99 ? '99+' : room.unreadCount}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <HiUsers className="w-3 h-3" />
-                    <span>Created by {room.createdByName}</span>
                   </div>
-                  {room.createdAt && (
-                    <div className="flex items-center gap-1">
-                      <HiClock className="w-3 h-3" />
-                      <span>
-                        {formatDistanceToNow(room.createdAt.toDate(), { addSuffix: true })}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </button>
             ))}
