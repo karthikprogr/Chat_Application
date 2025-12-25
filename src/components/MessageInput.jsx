@@ -114,7 +114,7 @@ const MessageInput = () => {
   }
 
   return (
-    <div className="border-t border-gray-200 bg-gray-50 p-4">
+    <div className="border-t border-gray-800 bg-gray-900 p-4">
       <form onSubmit={handleSubmit} className="flex items-center gap-3">
         <div className="flex-1 relative">
           <textarea
@@ -123,7 +123,7 @@ const MessageInput = () => {
             onChange={handleChange}
             onKeyPress={handleKeyPress}
             placeholder="Type a message"
-            className="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all scrollbar-thin"
+            className="w-full px-4 py-3 pr-12 bg-gray-800 border border-gray-700 text-white placeholder-gray-400 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all scrollbar-thin"
             rows="1"
             style={{ minHeight: '48px', maxHeight: '120px', height: 'auto' }}
             onInput={(e) => {
