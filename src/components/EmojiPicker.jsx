@@ -1,6 +1,19 @@
 import { useState } from 'react'
 import { HiX, HiSearch } from 'react-icons/hi'
 
+const categoryIcons = {
+  '😊': 'Smileys & Emotion',
+  '🖐️': 'Gestures & Body', 
+  '👤': 'People & Roles',
+  '🐻': 'Animals & Nature',
+  '🍕': 'Food & Drink',
+  '✈️': 'Travel & Places',
+  '⚽': 'Activities & Sports',
+  '💡': 'Objects & Tools',
+  '❤️': 'Symbols',
+  '🏁': 'Flags'
+}
+
 const emojiCategories = {
   'Smileys & Emotion': ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖'],
   'Gestures & Body': ['👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄', '💋', '🩸'],
@@ -15,7 +28,7 @@ const emojiCategories = {
 }
 
 const EmojiPicker = ({ onSelect, onClose }) => {
-  const [activeCategory, setActiveCategory] = useState('Smileys')
+  const [activeCategory, setActiveCategory] = useState('Smileys & Emotion')
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredEmojis = searchTerm
@@ -23,50 +36,43 @@ const EmojiPicker = ({ onSelect, onClose }) => {
     : emojiCategories[activeCategory]
 
   return (
-    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 w-80">
-      {/* Header */}
-      <div className="p-3 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-800">Emojis</h3>
-        <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-          <HiX className="w-4 h-4 text-gray-500" />
-        </button>
-      </div>
-
+    <div className="absolute bottom-full left-0 mb-2 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 z-50 w-96">
       {/* Search */}
-      <div className="p-2">
+      <div className="p-3 border-b border-gray-700">
         <div className="relative">
           <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search emojis..."
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Search emoji"
+            className="w-full pl-9 pr-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       </div>
 
-      {/* Categories */}
+      {/* Category Icons */}
       {!searchTerm && (
-        <div className="flex gap-1 px-2 pb-2 overflow-x-auto">
-          {Object.keys(emojiCategories).map(category => (
+        <div className="flex gap-2 px-3 py-2 border-b border-gray-700 overflow-x-auto">
+          {Object.entries(categoryIcons).map(([icon, category]) => (
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+              className={`p-2 rounded-lg text-2xl transition-colors flex-shrink-0 ${
                 activeCategory === category
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-700'
+                  : 'hover:bg-gray-700'
               }`}
+              title={category}
             >
-              {category}
+              {icon}
             </button>
           ))}
         </div>
       )}
 
       {/* Emoji Grid */}
-      <div className="p-2 grid grid-cols-8 gap-1 max-h-64 overflow-y-auto">
+      <div className="p-3 grid grid-cols-8 gap-1 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {filteredEmojis.map((emoji, index) => (
           <button
             key={index}
@@ -74,7 +80,7 @@ const EmojiPicker = ({ onSelect, onClose }) => {
               onSelect(emoji)
               onClose()
             }}
-            className="text-2xl hover:bg-gray-100 rounded p-1 transition-transform hover:scale-125"
+            className="text-2xl hover:bg-gray-700 rounded-lg p-2 transition-all hover:scale-110"
             title={emoji}
           >
             {emoji}
@@ -83,7 +89,7 @@ const EmojiPicker = ({ onSelect, onClose }) => {
       </div>
 
       {filteredEmojis.length === 0 && (
-        <div className="p-4 text-center text-gray-500 text-sm">
+        <div className="p-6 text-center text-gray-400 text-sm">
           No emojis found
         </div>
       )}
