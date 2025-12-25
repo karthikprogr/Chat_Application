@@ -5,7 +5,8 @@ import Message from './Message'
 import MessageInput from './MessageInput'
 import TypingIndicator from './TypingIndicator'
 import JoinRequestsModal from './JoinRequestsModal'
-import { HiUsers, HiInformationCircle, HiUserGroup, HiUserAdd, HiKey, HiClipboardCopy, HiSearch, HiDotsVertical, HiX } from 'react-icons/hi'
+import RoomSettingsModal from './RoomSettingsModal'
+import { HiUsers, HiInformationCircle, HiUserGroup, HiUserAdd, HiKey, HiClipboardCopy, HiSearch, HiDotsVertical, HiX, HiCog } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import { requestNotificationPermission, showNotification, playNotificationSound, updatePageTitle } from '../utils/notifications'
 import { toast } from 'react-toastify'
@@ -20,6 +21,7 @@ const ChatRoom = () => {
   const [showInfo, setShowInfo] = useState(false)
   const [showActiveUsers, setShowActiveUsers] = useState(false)
   const [showJoinRequests, setShowJoinRequests] = useState(false)
+  const [showRoomSettings, setShowRoomSettings] = useState(false)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -282,16 +284,28 @@ const ChatRoom = () => {
           <div className="absolute right-4 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 animate-slide-up">
             <div className="py-2">
               {isAdmin && (
-                <button
-                  onClick={() => {
-                    setShowJoinRequests(true)
-                    setShowSettingsMenu(false)
-                  }}
-                  className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
-                >
-                  <HiUserAdd className="w-5 h-5" />
-                  Join Requests
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      setShowRoomSettings(true)
+                      setShowSettingsMenu(false)
+                    }}
+                    className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+                  >
+                    <HiCog className="w-5 h-5" />
+                    Room Settings
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowJoinRequests(true)
+                      setShowSettingsMenu(false)
+                    }}
+                    className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+                  >
+                    <HiUserAdd className="w-5 h-5" />
+                    Join Requests
+                  </button>
+                </>
               )}
               <button
                 onClick={() => {
@@ -432,6 +446,11 @@ const ChatRoom = () => {
       {/* Join Requests Modal */}
       {showJoinRequests && isAdmin && (
         <JoinRequestsModal room={currentRoom} onClose={() => setShowJoinRequests(false)} />
+      )}
+
+      {/* Room Settings Modal */}
+      {showRoomSettings && (
+        <RoomSettingsModal room={currentRoom} onClose={() => setShowRoomSettings(false)} />
       )}
     </div>
   )

@@ -1,13 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChat } from '../context/ChatContext'
-import { HiPaperAirplane, HiEmojiHappy } from 'react-icons/hi'
+import { useAuth } from '../context/AuthContext'
+import { HiPaperAirplane, HiEmojiHappy, HiLockClosed } from 'react-icons/hi'
 
 const MessageInput = () => {
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const { sendMessage, setTyping, currentRoom } = useChat()
+  const { currentUser } = useAuth()
   const inputRef = useRef(null)
   const typingTimeoutRef = useRef(null)
+
+  const isAdmin = currentRoom?.admins?.includes(currentUser?.uid)
+  const canSendMessage = !currentRoom?.adminOnlyChat || isAdmin
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -71,6 +76,17 @@ const MessageInput = () => {
       input.focus()
       input.setSelectionRange(start + formattedText.length, start + formattedText.length)
     }, 0)
+  }
+
+  if (!canSendMessage) {
+    return (
+      <div className="border-t border-gray-200 bg-gray-50 p-4">
+        <div className="flex items-center justify-center gap-2 text-gray-500">
+          <HiLockClosed className="w-5 h-5" />
+          <p className="text-sm">Only admins can send messages in this room</p>
+        </div>
+      </div>
+    )
   }
 
   return (
