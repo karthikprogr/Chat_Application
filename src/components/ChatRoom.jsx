@@ -167,11 +167,21 @@ const ChatRoom = () => {
   // Close Active Users and Group Info when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (activeUsersRef.current && !activeUsersRef.current.contains(event.target)) {
-        setShowActiveUsers(false)
+      // Check if click is outside Active Users panel
+      if (showActiveUsers && activeUsersRef.current && !activeUsersRef.current.contains(event.target)) {
+        // Don't close if clicking on the settings menu button area
+        const isSettingsMenuClick = event.target.closest('.settings-menu') || event.target.closest('button[title="Settings"]')
+        if (!isSettingsMenuClick) {
+          setShowActiveUsers(false)
+        }
       }
-      if (groupInfoRef.current && !groupInfoRef.current.contains(event.target)) {
-        setShowInfo(false)
+      // Check if click is outside Group Info panel
+      if (showInfo && groupInfoRef.current && !groupInfoRef.current.contains(event.target)) {
+        // Don't close if clicking on the settings menu button area
+        const isSettingsMenuClick = event.target.closest('.settings-menu') || event.target.closest('button[title="Settings"]')
+        if (!isSettingsMenuClick) {
+          setShowInfo(false)
+        }
       }
     }
 
@@ -322,7 +332,7 @@ const ChatRoom = () => {
         
         {/* Settings Menu */}
         {showSettingsMenu && (
-          <div className="absolute right-4 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 animate-slide-up">
+          <div className="settings-menu absolute right-4 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 animate-slide-up">
             <div className="py-2">
               {isAdmin && (
                 <>
