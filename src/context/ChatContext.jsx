@@ -530,6 +530,7 @@ export const ChatProvider = ({ children }) => {
   const value = {
     rooms,
     currentRoom,
+    setCurrentRoom,
     messages,
     typingUsers,
     activeUsers,

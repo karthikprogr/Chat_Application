@@ -6,7 +6,7 @@ import MessageInput from './MessageInput'
 import TypingIndicator from './TypingIndicator'
 import JoinRequestsModal from './JoinRequestsModal'
 import RoomSettingsModal from './RoomSettingsModal'
-import { HiUsers, HiInformationCircle, HiUserGroup, HiUserAdd, HiKey, HiClipboardCopy, HiSearch, HiDotsVertical, HiX, HiCog, HiLogout } from 'react-icons/hi'
+import { HiUsers, HiInformationCircle, HiUserGroup, HiUserAdd, HiKey, HiClipboardCopy, HiSearch, HiDotsVertical, HiX, HiCog, HiLogout, HiArrowLeft } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import { requestNotificationPermission, showNotification, playNotificationSound, updatePageTitle } from '../utils/notifications'
 import { toast } from 'react-toastify'
@@ -14,7 +14,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/config'
 
 const ChatRoom = () => {
-  const { currentRoom, messages, loadingMessages, activeUsers, leaveRoom } = useChat()
+  const { currentRoom, messages, loadingMessages, activeUsers, leaveRoom, setCurrentRoom } = useChat()
   const { currentUser } = useAuth()
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
@@ -272,6 +272,15 @@ const ChatRoom = () => {
     <div className="flex-1 flex flex-col h-full bg-gray-900">
       <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 shadow-md border-b border-gray-800">
         <div className="flex items-center justify-between">
+          {/* Back button for mobile */}
+          <button
+            onClick={() => setCurrentRoom(null)}
+            className="lg:hidden mr-3 p-2 hover:bg-white/20 rounded-lg transition-colors"
+            title="Back to chats"
+          >
+            <HiArrowLeft className="w-6 h-6" />
+          </button>
+          
           <div className="flex-1">
             <h2 className="text-xl font-bold mb-1">{currentRoom.name}</h2>
             {memberNames.length > 0 && (
