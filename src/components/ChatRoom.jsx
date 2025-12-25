@@ -98,11 +98,26 @@ const ChatRoom = () => {
         scrollToBottom()
       }
     } else if (prevMessagesLength.current === 0 && messages.length > 0) {
-      // Initial load - scroll to bottom
-      setTimeout(() => scrollToBottom(), 100)
+      // Initial load - scroll to bottom immediately
+      requestAnimationFrame(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+        }
+      })
     }
     prevMessagesLength.current = messages.length
   }, [messages, currentUser?.uid])
+
+  // Also scroll to bottom when room changes
+  useEffect(() => {
+    if (currentRoom && messagesContainerRef.current) {
+      requestAnimationFrame(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+        }
+      })
+    }
+  }, [currentRoom?.id])
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
