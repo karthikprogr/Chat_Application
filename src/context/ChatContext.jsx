@@ -81,11 +81,14 @@ export const ChatProvider = ({ children }) => {
       return
     }
 
-    let isInitialLoad = true
+    // Only show loading when switching rooms, not on message updates
+    const currentRoomId = currentRoom.id
     setLoadingMessages(true)
-    const messagesRef = collection(db, 'rooms', currentRoom.id, 'messages')
+    
+    const messagesRef = collection(db, 'rooms', currentRoomId, 'messages')
     const q = query(messagesRef, orderBy('createdAt', 'asc'))
 
+    let firstLoad = true
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messagesData = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -93,10 +96,10 @@ export const ChatProvider = ({ children }) => {
       }))
       setMessages(messagesData)
       
-      // Only set loading to false on initial load
-      if (isInitialLoad) {
+      // Turn off loading only after first snapshot
+      if (firstLoad) {
+        firstLoad = false
         setLoadingMessages(false)
-        isInitialLoad = false
       }
     }, (error) => {
       console.error('Error loading messages:', error)
@@ -106,7 +109,6 @@ export const ChatProvider = ({ children }) => {
 
     return () => {
       unsubscribe()
-      setLoadingMessages(false)
     }
   }, [currentRoom?.id])
 
