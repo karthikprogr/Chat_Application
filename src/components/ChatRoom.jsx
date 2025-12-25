@@ -18,6 +18,8 @@ const ChatRoom = () => {
   const { currentUser } = useAuth()
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
+  const activeUsersRef = useRef(null)
+  const groupInfoRef = useRef(null)
   const [showInfo, setShowInfo] = useState(false)
   const [showActiveUsers, setShowActiveUsers] = useState(false)
   const [showJoinRequests, setShowJoinRequests] = useState(false)
@@ -161,6 +163,26 @@ const ChatRoom = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
+
+  // Close Active Users and Group Info when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (activeUsersRef.current && !activeUsersRef.current.contains(event.target)) {
+        setShowActiveUsers(false)
+      }
+      if (groupInfoRef.current && !groupInfoRef.current.contains(event.target)) {
+        setShowInfo(false)
+      }
+    }
+
+    if (showActiveUsers || showInfo) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showActiveUsers, showInfo])
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current && prevMessagesLength.current > 0) {
@@ -381,7 +403,7 @@ const ChatRoom = () => {
           </div>
         )}
         {showActiveUsers && (
-          <div className="mt-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm animate-slide-up">
+          <div ref={activeUsersRef} className="mt-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm animate-slide-up">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <HiUserGroup className="w-5 h-5" />
               Active Users ({activeUsers.length})
@@ -404,7 +426,7 @@ const ChatRoom = () => {
           </div>
         )}
         {showInfo && (
-          <div className="mt-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm animate-slide-up">
+          <div ref={groupInfoRef} className="mt-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm animate-slide-up">
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-2">
                 <HiUsers className="w-4 h-4" />
