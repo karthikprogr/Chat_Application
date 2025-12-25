@@ -185,7 +185,7 @@ const ChatRoom = () => {
         clearTimeout(timer2)
       }
     }
-  }, [currentRoom?.id, loadingMessages])
+  }, [currentRoom?.id])
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
