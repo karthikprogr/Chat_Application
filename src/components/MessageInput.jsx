@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { useChat } from '../context/ChatContext'
 import { useAuth } from '../context/AuthContext'
 import { HiPaperAirplane, HiEmojiHappy, HiLockClosed } from 'react-icons/hi'
+import EmojiPicker from './EmojiPicker'
 
 const MessageInput = () => {
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const { sendMessage, setTyping, currentRoom } = useChat()
   const { currentUser } = useAuth()
   const inputRef = useRef(null)
@@ -88,6 +90,18 @@ const MessageInput = () => {
     }, 0)
   }
 
+  const handleEmojiSelect = (emoji) => {
+    const input = inputRef.current
+    const start = input.selectionStart
+    const end = input.selectionEnd
+    const newMessage = message.substring(0, start) + emoji + message.substring(end)
+    setMessage(newMessage)
+    setTimeout(() => {
+      input.focus()
+      input.setSelectionRange(start + emoji.length, start + emoji.length)
+    }, 0)
+  }
+
   if (!canSendMessage) {
     return (
       <div className="border-t border-gray-200 bg-gray-50 p-4">
@@ -128,9 +142,20 @@ const MessageInput = () => {
                 e.target.style.height = e.target.scrollHeight + 'px'
               }}
             />
-            <button type="button" className="absolute right-3 bottom-3 text-gray-400 hover:text-gray-600 transition-colors" title="Emojis (Coming soon)">
+            <button 
+              type="button" 
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="absolute right-3 bottom-3 text-gray-400 hover:text-gray-600 transition-colors" 
+              title="Emojis"
+            >
               <HiEmojiHappy className="w-5 h-5" />
             </button>
+            {showEmojiPicker && (
+              <EmojiPicker 
+                onSelect={handleEmojiSelect}
+                onClose={() => setShowEmojiPicker(false)}
+              />
+            )}
           </div>
           <button
             type="submit"
