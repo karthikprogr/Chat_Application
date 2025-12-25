@@ -234,16 +234,22 @@ const ChatRoom = () => {
           messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
         }
       }
+      // Immediate scroll
       scrollToEnd()
+      // Multiple backup scrolls with increasing delays
       const timer1 = setTimeout(scrollToEnd, 50)
       const timer2 = setTimeout(scrollToEnd, 150)
+      const timer3 = setTimeout(scrollToEnd, 300)
+      const timer4 = setTimeout(scrollToEnd, 500)
       
       return () => {
         clearTimeout(timer1)
         clearTimeout(timer2)
+        clearTimeout(timer3)
+        clearTimeout(timer4)
       }
     }
-  }, [currentRoom?.id])
+  }, [currentRoom?.id, messages.length])
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
