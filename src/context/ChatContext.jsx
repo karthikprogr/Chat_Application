@@ -14,6 +14,7 @@ import {
   limit,
   updateDoc,
   arrayUnion,
+  arrayRemove,
   deleteDoc
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
