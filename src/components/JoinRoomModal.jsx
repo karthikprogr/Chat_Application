@@ -66,30 +66,30 @@ const JoinRoomModal = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slide-up">
+      <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full animate-slide-up border border-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">Join a Room</h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+          <h2 className="text-2xl font-bold text-white">Join a Room</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-300 transition-colors"
           >
             <HiX className="w-6 h-6" />
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-800">
           <button
             onClick={() => setSearchMode(false)}
-            className={`flex-1 px-4 py-3 font-medium transition-colors ${!searchMode ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 px-4 py-3 font-medium transition-colors ${!searchMode ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-300'}`}
           >
             <HiKey className="w-5 h-5 inline-block mr-2" />
             Invite Code
           </button>
           <button
             onClick={() => setSearchMode(true)}
-            className={`flex-1 px-4 py-3 font-medium transition-colors ${searchMode ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 px-4 py-3 font-medium transition-colors ${searchMode ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-gray-300'}`}
           >
             <HiSearch className="w-5 h-5 inline-block mr-2" />
             Search Rooms
@@ -102,7 +102,7 @@ const JoinRoomModal = ({ onClose }) => {
             /* Invite Code Form */
             <form onSubmit={handleJoinWithCode} className="space-y-4">
               <div>
-                <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-300 mb-2">
                   Enter Invite Code
                 </label>
                 <input
@@ -111,7 +111,7 @@ const JoinRoomModal = ({ onClose }) => {
                   required
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-center text-lg font-mono tracking-widest uppercase"
+                  className="w-full px-4 py-3 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-center text-lg font-mono tracking-widest uppercase placeholder-gray-500"
                   placeholder="ABC123XY"
                   maxLength={8}
                   disabled={loading}
@@ -121,8 +121,8 @@ const JoinRoomModal = ({ onClose }) => {
                 </p>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800">
+              <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
+                <p className="text-sm text-yellow-400">
                   <strong>🔒 Privacy:</strong> If the room is private, your join request will need admin approval.
                 </p>
               </div>
@@ -148,40 +148,40 @@ const JoinRoomModal = ({ onClose }) => {
           ) : (
             /* Search Form */
             <div className="space-y-4">
-              <form onSubmit={handleSearch}>
-                <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-2">
-                  Search by Room Name
-                </label>
-                <div className="flex gap-2">
+              <form onSubmit={handleSearch} className="space-y-3">
+                <div>
+                  <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-300 mb-2">
+                    Search by Room Name
+                  </label>
                   <input
                     id="searchTerm"
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-4 py-3 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-500"
                     placeholder="Type room name..."
                     disabled={searching}
                   />
-                  <button
-                    type="submit"
-                    disabled={searching || !searchTerm.trim()}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {searching ? '...' : 'Search'}
-                  </button>
                 </div>
+                <button
+                  type="submit"
+                  disabled={searching || !searchTerm.trim()}
+                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
+                >
+                  {searching ? 'Searching...' : 'Search'}
+                </button>
               </form>
 
               {/* Search Results */}
               <div className="max-h-64 overflow-y-auto space-y-2">
                 {searchResults.length > 0 ? (
                   searchResults.map((room) => (
-                    <div key={room.id} className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 transition-colors">
+                    <div key={room.id} className="p-4 border border-gray-700 bg-gray-800 rounded-lg hover:border-blue-500 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-800 mb-1">{room.name}</h3>
+                          <h3 className="font-semibold text-white mb-1">{room.name}</h3>
                           {room.description && (
-                            <p className="text-sm text-gray-600 mb-2">{room.description}</p>
+                            <p className="text-sm text-gray-400 mb-2">{room.description}</p>
                           )}
                           <div className="flex items-center gap-3 text-xs text-gray-500">
                             <span className="flex items-center gap-1">
@@ -205,16 +205,16 @@ const JoinRoomModal = ({ onClose }) => {
                     </div>
                   ))
                 ) : searchTerm && !searching ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <HiSearch className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                  <div className="text-center py-8 text-gray-400">
+                    <HiSearch className="w-12 h-12 mx-auto mb-2 text-gray-600" />
                     <p>No rooms found matching "{searchTerm}"</p>
                   </div>
                 ) : null}
               </div>
 
               {searchResults.length === 0 && !searchTerm && (
-                <div className="text-center py-8 text-gray-500">
-                  <HiSearch className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                <div className="text-center py-8 text-gray-400">
+                  <HiSearch className="w-12 h-12 mx-auto mb-2 text-gray-600" />
                   <p>Search for rooms by name</p>
                   <p className="text-sm mt-1">You'll get the invite code to join</p>
                 </div>
