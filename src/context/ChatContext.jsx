@@ -400,6 +400,15 @@ export const ChatProvider = ({ children }) => {
       return
     }
 
+    // Check if admin-only chat is enabled
+    if (currentRoom?.adminOnlyChat) {
+      const isAdmin = currentRoom?.admins?.includes(currentUser.uid)
+      if (!isAdmin) {
+        toast.error('Only admins can send messages in this room')
+        throw new Error('Admin only chat')
+      }
+    }
+
     try {
       // Send message to messages subcollection
       const messagesRef = collection(db, 'rooms', roomId, 'messages')
