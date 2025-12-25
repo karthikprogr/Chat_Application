@@ -6,7 +6,7 @@ import MessageInput from './MessageInput'
 import TypingIndicator from './TypingIndicator'
 import JoinRequestsModal from './JoinRequestsModal'
 import RoomSettingsModal from './RoomSettingsModal'
-import { HiUsers, HiInformationCircle, HiUserGroup, HiUserAdd, HiKey, HiClipboardCopy, HiSearch, HiDotsVertical, HiX, HiCog } from 'react-icons/hi'
+import { HiUsers, HiInformationCircle, HiUserGroup, HiUserAdd, HiKey, HiClipboardCopy, HiSearch, HiDotsVertical, HiX, HiCog, HiLogout } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import { requestNotificationPermission, showNotification, playNotificationSound, updatePageTitle } from '../utils/notifications'
 import { toast } from 'react-toastify'
@@ -14,7 +14,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/config'
 
 const ChatRoom = () => {
-  const { currentRoom, messages, loadingMessages, activeUsers } = useChat()
+  const { currentRoom, messages, loadingMessages, activeUsers, leaveRoom } = useChat()
   const { currentUser } = useAuth()
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
@@ -62,6 +62,25 @@ const ChatRoom = () => {
     if (currentRoom?.inviteCode) {
       navigator.clipboard.writeText(currentRoom.inviteCode)
       toast.success('Invite code copied to clipboard!')
+    }
+  }
+
+  const handleLeaveRoom = async () => {
+    if (!currentRoom?.id) return
+    
+    const confirmLeave = window.confirm(
+      `Are you sure you want to leave "${currentRoom.name}"? You'll need an invite code to rejoin if it's a private room.`
+    )
+    
+    if (confirmLeave) {
+      try {
+        await leaveRoom(currentRoom.id)
+        toast.success(`You left ${currentRoom.name}`)
+        setShowSettingsMenu(false)
+      } catch (error) {
+        console.error('Error leaving room:', error)
+        toast.error(error.message || 'Failed to leave room')
+      }
     }
   }
 
@@ -308,16 +327,25 @@ const ChatRoom = () => {
                 </>
               )}
               {!isAdmin && (
-                <button
-                  onClick={() => {
-                    setShowRoomSettings(true)
-                    setShowSettingsMenu(false)
-                  }}
-                  className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
-                >
-                  <HiUsers className="w-5 h-5" />
-                  View Members
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      setShowRoomSettings(true)
+                      setShowSettingsMenu(false)
+                    }}
+                    className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+                  >
+                    <HiUsers className="w-5 h-5" />
+                    View Members
+                  </button>
+                  <button
+                    onClick={handleLeaveRoom}
+                    className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-3"
+                  >
+                    <HiLogout className="w-5 h-5" />
+                    Leave Room
+                  </button>
+                </>
               )}
               <button
                 onClick={() => {
