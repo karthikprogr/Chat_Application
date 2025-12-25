@@ -307,6 +307,18 @@ const ChatRoom = () => {
                   </button>
                 </>
               )}
+              {!isAdmin && (
+                <button
+                  onClick={() => {
+                    setShowRoomSettings(true)
+                    setShowSettingsMenu(false)
+                  }}
+                  className="w-full px-4 py-2 text-left text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+                >
+                  <HiUsers className="w-5 h-5" />
+                  View Members
+                </button>
+              )}
               <button
                 onClick={() => {
                   setShowActiveUsers(!showActiveUsers)

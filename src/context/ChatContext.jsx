@@ -480,6 +480,52 @@ export const ChatProvider = ({ children }) => {
     setCurrentRoom(room)
   }
 
+  // Leave a room
+  const leaveRoom = async (roomId) => {
+    if (!currentUser) {
+      toast.error('You must be logged in')
+      throw new Error('Not authenticated')
+    }
+
+    try {
+      const roomRef = doc(db, 'rooms', roomId)
+      const roomSnap = await getDoc(roomRef)
+      
+      if (!roomSnap.exists()) {
+        toast.error('Room not found')
+        throw new Error('Room not found')
+      }
+
+      const roomData = roomSnap.data()
+
+      // Check if user is the last admin
+      if (roomData.admins?.includes(currentUser.uid) && roomData.admins.length === 1) {
+        toast.error('You are the last admin. Please assign another admin before leaving.')
+        throw new Error('Last admin cannot leave')
+      }
+
+      // Remove user from members and admins
+      await updateDoc(roomRef, {
+        members: arrayRemove(currentUser.uid),
+        admins: arrayRemove(currentUser.uid),
+        memberCount: (roomData.memberCount || 1) - 1
+      })
+
+      // If this is the current room, clear it
+      if (currentRoom?.id === roomId) {
+        setCurrentRoom(null)
+      }
+
+      toast.success('Left room successfully')
+    } catch (error) {
+      console.error('Error leaving room:', error)
+      if (!error.message?.includes('Last admin')) {
+        toast.error('Failed to leave room')
+      }
+      throw error
+    }
+  }
+
   const value = {
     rooms,
     currentRoom,
@@ -495,7 +541,8 @@ export const ChatProvider = ({ children }) => {
     joinRoomWithCode,
     approveJoinRequest,
     rejectJoinRequest,
-    searchRooms
+    searchRooms,
+    leaveRoom
   }
 
   return (

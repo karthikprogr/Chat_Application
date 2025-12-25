@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useChat } from '../context/ChatContext'
 import { useAuth } from '../context/AuthContext'
-import { HiX, HiUserRemove, HiUserAdd, HiShieldCheck, HiLockClosed, HiLockOpen } from 'react-icons/hi'
+import { HiX, HiUserRemove, HiUserAdd, HiShieldCheck, HiLockClosed, HiLockOpen, HiLogout } from 'react-icons/hi'
 import { collection, getDocs, doc, updateDoc, arrayRemove, arrayUnion, getDoc } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { toast } from 'react-toastify'
 
-const RoomSettingsModal = ({ room, onClose }) => {
+const RoomSettingsModal = ({ room, onClose, isReadOnly = false }) => {
   const { currentUser } = useAuth()
+  const { leaveRoom } = useChat()
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(false)
   const [adminOnlyChat, setAdminOnlyChat] = useState(room?.adminOnlyChat || false)
@@ -135,19 +136,81 @@ const RoomSettingsModal = ({ room, onClose }) => {
     }
   }
 
-  if (!isAdmin) {
+  const handleLeaveRoom = async () => {
+    if (window.confirm('Are you sure you want to leave this room?')) {
+      setLoading(true)
+      try {
+        await leaveRoom(room.id)
+        toast.success('Left room successfully')
+        onClose()
+      } catch (error) {
+        console.error('Error leaving room:', error)
+        toast.error('Failed to leave room')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  // Non-admin view - read-only
+  if (!isAdmin || isReadOnly) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-          <div className="text-center">
-            <HiShieldCheck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Admin Only</h2>
-            <p className="text-gray-600 mb-4">Only group admins can access settings</p>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-slide-up">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-800">Room Members</h2>
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              Close
+              <HiX className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Members List */}
+          <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+            <div>
+              <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <HiUserAdd className="w-5 h-5" />
+                Members ({members.length})
+              </h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {members.map(member => (
+                  <div key={member.uid} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    {member.photoURL ? (
+                      <img src={member.photoURL} alt={member.displayName} className="w-10 h-10 rounded-full" />
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                        {member.displayName?.[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">
+                        {member.displayName}
+                        {member.uid === currentUser.uid && ' (You)'}
+                      </p>
+                      {member.isAdmin && (
+                        <span className="text-xs text-blue-600 font-semibold flex items-center gap-1">
+                          <HiShieldCheck className="w-3 h-3" /> Admin
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer with Leave Button */}
+          <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <button
+              onClick={handleLeaveRoom}
+              disabled={loading}
+              className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <HiLogout className="w-5 h-5" />
+              {loading ? 'Leaving...' : 'Leave Room'}
             </button>
           </div>
         </div>
