@@ -132,6 +132,18 @@ export const ChatProvider = ({ children }) => {
         firstLoad = false
         setLoadingMessages(false)
       }
+      
+      // Update lastSeen timestamp whenever messages are viewed
+      if (currentUser && currentRoomId) {
+        const roomRef = doc(db, 'rooms', currentRoomId)
+        setDoc(roomRef, {
+          lastSeen: {
+            [currentUser.uid]: serverTimestamp()
+          }
+        }, { merge: true }).catch(error => {
+          console.log('Could not update lastSeen:', error)
+        })
+      }
     }, (error) => {
       console.error('Error loading messages:', error)
       toast.error('Failed to load messages')
@@ -512,23 +524,9 @@ export const ChatProvider = ({ children }) => {
   }
 
   // Join a room
-  const joinRoom = async (room) => {
+  const joinRoom = (room) => {
     setCurrentRoom(room)
-    
-    // Mark room as seen (update lastSeen timestamp)
-    if (currentUser && room?.id) {
-      try {
-        const roomRef = doc(db, 'rooms', room.id)
-        await setDoc(roomRef, {
-          lastSeen: {
-            ...room.lastSeen,
-            [currentUser.uid]: serverTimestamp()
-          }
-        }, { merge: true })
-      } catch (error) {
-        console.log('Could not update lastSeen:', error)
-      }
-    }
+    // lastSeen will be automatically updated when messages load
   }
 
   // Leave a room
