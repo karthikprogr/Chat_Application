@@ -66,11 +66,11 @@ export const ChatProvider = ({ children }) => {
           const messagesRef = collection(db, 'rooms', roomId, 'messages')
           const unreadQuery = query(
             messagesRef, 
-            where('createdAt', '>', lastSeenTime),
-            where('userId', '!=', currentUser.uid)
+            where('createdAt', '>', lastSeenTime)
           )
           const unreadSnapshot = await getDocs(unreadQuery)
-          unreadCount = unreadSnapshot.size
+          // Count only messages not sent by current user
+          unreadCount = unreadSnapshot.docs.filter(doc => doc.data().userId !== currentUser.uid).length
         } catch (error) {
           console.log('Could not fetch unread count:', error)
         }
@@ -213,7 +213,10 @@ export const ChatProvider = ({ children }) => {
         inviteCode: inviteCode,
         members: [currentUser.uid],
         admins: [currentUser.uid],
-        memberCount: 1
+        memberCount: 1,
+        lastSeen: {
+          [currentUser.uid]: serverTimestamp()
+        }
       })
 
       toast.success(`Room created! Invite code: ${inviteCode}`)
@@ -300,7 +303,8 @@ export const ChatProvider = ({ children }) => {
       const roomRef = doc(db, 'rooms', roomId)
       await updateDoc(roomRef, {
         members: [...(roomData.members || []), currentUser.uid],
-        memberCount: (roomData.memberCount || 0) + 1
+        memberCount: (roomData.memberCount || 0) + 1,
+        [`lastSeen.${currentUser.uid}`]: serverTimestamp()
       })
 
       toast.success('Joined room successfully!')
@@ -336,7 +340,8 @@ export const ChatProvider = ({ children }) => {
       // Add user to members
       await updateDoc(roomRef, {
         members: [...(roomData.members || []), userId],
-        memberCount: (roomData.memberCount || 0) + 1
+        memberCount: (roomData.memberCount || 0) + 1,
+        [`lastSeen.${userId}`]: serverTimestamp()
       })
 
       // Update request status
