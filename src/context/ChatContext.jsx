@@ -6,6 +6,7 @@ import {
   orderBy, 
   onSnapshot,
   serverTimestamp,
+  Timestamp,
   doc,
   setDoc,
   getDoc,
@@ -79,7 +80,8 @@ export const ChatProvider = ({ children }) => {
         // Calculate unread count by counting messages after lastSeen
         let unreadCount = 0
         try {
-          const lastSeenTime = data.lastSeen?.[currentUser.uid]?.toDate?.() || new Date(0)
+          // Keep as Firestore Timestamp for proper comparison
+          const lastSeenTime = data.lastSeen?.[currentUser.uid] || Timestamp.fromDate(new Date(0))
           const messagesRef = collection(db, 'rooms', roomId, 'messages')
           const unreadQuery = query(
             messagesRef, 
@@ -137,8 +139,9 @@ export const ChatProvider = ({ children }) => {
     return () => {
       if (currentRoom?.id && currentUser) {
         const roomRef = doc(db, 'rooms', currentRoom.id)
-        // Use current time + 1 second to ensure all messages are marked as seen
-        const markAsSeenTime = new Date(Date.now() + 1000)
+        // Use Firestore Timestamp + 1 second to ensure all messages are marked as seen
+        const nowDate = new Date(Date.now() + 1000)
+        const markAsSeenTime = Timestamp.fromDate(nowDate)
         setDoc(roomRef, {
           lastSeen: {
             [currentUser.uid]: markAsSeenTime
@@ -184,11 +187,12 @@ export const ChatProvider = ({ children }) => {
       if (currentUser && currentRoomId && messagesData.length > 0) {
         // Get the latest message timestamp
         const latestMessage = messagesData[messagesData.length - 1]
-        const latestTime = latestMessage.createdAt?.toDate?.()
+        const latestTime = latestMessage.createdAt
         
         if (latestTime) {
-          // Set lastSeen to 1 second after the latest message to ensure all are marked as seen
-          const markAsSeenTime = new Date(latestTime.getTime() + 1000)
+          // Convert to Firestore Timestamp and add 1 second
+          const latestDate = latestTime.toDate()
+          const markAsSeenTime = Timestamp.fromDate(new Date(latestDate.getTime() + 1000))
           
           const roomRef = doc(db, 'rooms', currentRoomId)
           setDoc(roomRef, {
@@ -199,6 +203,16 @@ export const ChatProvider = ({ children }) => {
             console.log('Could not update lastSeen:', error)
           })
         }
+      } else if (currentUser && currentRoomId) {
+        // No messages yet, just set to current time
+        const roomRef = doc(db, 'rooms', currentRoomId)
+        setDoc(roomRef, {
+          lastSeen: {
+            [currentUser.uid]: Timestamp.now()
+          }
+        }, { merge: true }).catch(error => {
+          console.log('Could not update lastSeen:', error)
+        })
       }
     }, (error) => {
       console.error('Error loading messages:', error)
