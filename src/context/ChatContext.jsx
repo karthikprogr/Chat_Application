@@ -46,6 +46,7 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     if (!currentUser) {
       setRooms([])
+      setCurrentRoom(null) // Clear current room on logout
       setLoadingRooms(false)
       return
     }
@@ -61,10 +62,7 @@ export const ChatProvider = ({ children }) => {
       setRooms(roomsData)
       setLoadingRooms(false)
 
-      // Auto-select first room only on initial load
-      if (!currentRoom && roomsData.length > 0 && snapshot.docChanges().length === roomsData.length) {
-        setCurrentRoom(roomsData[0])
-      }
+      // Don't auto-select any room - let user choose from the list
     }, (error) => {
       console.error('Error loading rooms:', error)
       toast.error('Failed to load chat rooms')
