@@ -140,7 +140,16 @@ export const ChatProvider = ({ children }) => {
           lastSeen: {
             [currentUser.uid]: serverTimestamp()
           }
-        }, { merge: true }).catch(error => {
+        }, { merge: true }).then(() => {
+          // Immediately update the unread count in local state
+          setRooms(prevRooms => 
+            prevRooms.map(room => 
+              room.id === currentRoomId 
+                ? { ...room, unreadCount: 0 }
+                : room
+            )
+          )
+        }).catch(error => {
           console.log('Could not update lastSeen:', error)
         })
       }
