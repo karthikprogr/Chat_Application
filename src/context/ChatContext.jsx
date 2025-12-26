@@ -52,13 +52,45 @@ export const ChatProvider = ({ children }) => {
     }
 
     const roomsRef = collection(db, 'rooms')
-    const q = query(roomsRef, where('members', 'array-contains', currentUser.uid), orderBy('createdAt', 'desc'))
+    const q = query(roomsRef, where('members', 'array-contains', currentUser.uid))
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const roomsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const roomsDataPromises = snapshot.docs.map(async (docSnapshot) => {
+        const data = docSnapshot.data()
+        const roomId = docSnapshot.id
+        
+        // Calculate unread count by counting messages after lastSeen
+        let unreadCount = 0
+        try {
+          const lastSeenTime = data.lastSeen?.[currentUser.uid]?.toDate?.() || new Date(0)
+          const messagesRef = collection(db, 'rooms', roomId, 'messages')
+          const unreadQuery = query(
+            messagesRef, 
+            where('createdAt', '>', lastSeenTime),
+            where('userId', '!=', currentUser.uid)
+          )
+          const unreadSnapshot = await getDocs(unreadQuery)
+          unreadCount = unreadSnapshot.size
+        } catch (error) {
+          console.log('Could not fetch unread count:', error)
+        }
+        
+        return {
+          id: roomId,
+          ...data,
+          unreadCount
+        }
+      })
+      
+      const roomsData = await Promise.all(roomsDataPromises)
+      
+      // Sort by lastMessageAt (newest first)
+      roomsData.sort((a, b) => {
+        const timeA = a.lastMessageAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0)
+        const timeB = b.lastMessageAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0)
+        return timeB - timeA
+      })
+      
       setRooms(roomsData)
       setLoadingRooms(false)
 
@@ -475,8 +507,23 @@ export const ChatProvider = ({ children }) => {
   }
 
   // Join a room
-  const joinRoom = (room) => {
+  const joinRoom = async (room) => {
     setCurrentRoom(room)
+    
+    // Mark room as seen (update lastSeen timestamp)
+    if (currentUser && room?.id) {
+      try {
+        const roomRef = doc(db, 'rooms', room.id)
+        await setDoc(roomRef, {
+          lastSeen: {
+            ...room.lastSeen,
+            [currentUser.uid]: serverTimestamp()
+          }
+        }, { merge: true })
+      } catch (error) {
+        console.log('Could not update lastSeen:', error)
+      }
+    }
   }
 
   // Leave a room
