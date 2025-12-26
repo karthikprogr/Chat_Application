@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { 
   collection, 
   addDoc, 
@@ -41,6 +41,14 @@ export const ChatProvider = ({ children }) => {
   const [loadingRooms, setLoadingRooms] = useState(true)
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  
+  // Use ref to track current room for snapshot callback
+  const currentRoomRef = useRef(null)
+  
+  // Update ref when currentRoom changes
+  useEffect(() => {
+    currentRoomRef.current = currentRoom?.id || null
+  }, [currentRoom])
 
   // Load chat rooms (only rooms where user is a member)
   useEffect(() => {
@@ -58,6 +66,15 @@ export const ChatProvider = ({ children }) => {
       const roomsDataPromises = snapshot.docs.map(async (docSnapshot) => {
         const data = docSnapshot.data()
         const roomId = docSnapshot.id
+        
+        // Never show unread count for currently open room
+        if (currentRoomRef.current === roomId) {
+          return {
+            id: roomId,
+            ...data,
+            unreadCount: 0
+          }
+        }
         
         // Calculate unread count by counting messages after lastSeen
         let unreadCount = 0
