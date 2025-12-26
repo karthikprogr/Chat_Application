@@ -137,9 +137,11 @@ export const ChatProvider = ({ children }) => {
     return () => {
       if (currentRoom?.id && currentUser) {
         const roomRef = doc(db, 'rooms', currentRoom.id)
+        // Use current time + 1 second to ensure all messages are marked as seen
+        const markAsSeenTime = new Date(Date.now() + 1000)
         setDoc(roomRef, {
           lastSeen: {
-            [currentUser.uid]: serverTimestamp()
+            [currentUser.uid]: markAsSeenTime
           }
         }, { merge: true }).catch(error => {
           console.log('Could not update lastSeen on room exit:', error)
@@ -177,16 +179,26 @@ export const ChatProvider = ({ children }) => {
         setLoadingMessages(false)
       }
       
-      // Update lastSeen timestamp whenever messages are viewed
-      if (currentUser && currentRoomId) {
-        const roomRef = doc(db, 'rooms', currentRoomId)
-        setDoc(roomRef, {
-          lastSeen: {
-            [currentUser.uid]: serverTimestamp()
-          }
-        }, { merge: true }).catch(error => {
-          console.log('Could not update lastSeen:', error)
-        })
+      // Update lastSeen to mark all messages as seen
+      // Use a timestamp that's guaranteed to be after all current messages
+      if (currentUser && currentRoomId && messagesData.length > 0) {
+        // Get the latest message timestamp
+        const latestMessage = messagesData[messagesData.length - 1]
+        const latestTime = latestMessage.createdAt?.toDate?.()
+        
+        if (latestTime) {
+          // Set lastSeen to 1 second after the latest message to ensure all are marked as seen
+          const markAsSeenTime = new Date(latestTime.getTime() + 1000)
+          
+          const roomRef = doc(db, 'rooms', currentRoomId)
+          setDoc(roomRef, {
+            lastSeen: {
+              [currentUser.uid]: markAsSeenTime
+            }
+          }, { merge: true }).catch(error => {
+            console.log('Could not update lastSeen:', error)
+          })
+        }
       }
     }, (error) => {
       console.error('Error loading messages:', error)
