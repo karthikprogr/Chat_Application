@@ -104,6 +104,19 @@ export const ChatProvider = ({ children }) => {
     return unsubscribe
   }, [currentUser])
 
+  // Clear unread count for currently open room
+  useEffect(() => {
+    if (currentRoom?.id) {
+      setRooms(prevRooms =>
+        prevRooms.map(room =>
+          room.id === currentRoom.id
+            ? { ...room, unreadCount: 0 }
+            : room
+        )
+      )
+    }
+  }, [currentRoom?.id])
+
   // Load messages for current room
   useEffect(() => {
     if (!currentRoom) {
@@ -140,16 +153,7 @@ export const ChatProvider = ({ children }) => {
           lastSeen: {
             [currentUser.uid]: serverTimestamp()
           }
-        }, { merge: true }).then(() => {
-          // Immediately update the unread count in local state
-          setRooms(prevRooms => 
-            prevRooms.map(room => 
-              room.id === currentRoomId 
-                ? { ...room, unreadCount: 0 }
-                : room
-            )
-          )
-        }).catch(error => {
+        }, { merge: true }).catch(error => {
           console.log('Could not update lastSeen:', error)
         })
       }
