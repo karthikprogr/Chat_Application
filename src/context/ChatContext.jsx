@@ -121,7 +121,7 @@ export const ChatProvider = ({ children }) => {
     return unsubscribe
   }, [currentUser])
 
-  // Clear unread count for currently open room
+  // Clear unread count for currently open room and update lastSeen when leaving
   useEffect(() => {
     if (currentRoom?.id) {
       setRooms(prevRooms =>
@@ -132,7 +132,21 @@ export const ChatProvider = ({ children }) => {
         )
       )
     }
-  }, [currentRoom?.id])
+    
+    // Cleanup: Update lastSeen when leaving this room
+    return () => {
+      if (currentRoom?.id && currentUser) {
+        const roomRef = doc(db, 'rooms', currentRoom.id)
+        setDoc(roomRef, {
+          lastSeen: {
+            [currentUser.uid]: serverTimestamp()
+          }
+        }, { merge: true }).catch(error => {
+          console.log('Could not update lastSeen on room exit:', error)
+        })
+      }
+    }
+  }, [currentRoom?.id, currentUser])
 
   // Load messages for current room
   useEffect(() => {
