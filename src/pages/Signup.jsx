@@ -114,25 +114,25 @@ const Signup = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-4">
       <div className="max-w-md w-full">
         {/* Logo and Title */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-block p-4 bg-white rounded-full shadow-lg mb-4">
-            <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-block p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full shadow-lg mb-4">
+            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Join ChatApp</h1>
-          <p className="text-pink-100">Create your account and start chatting</p>
+          <p className="text-blue-200">Create your account and start chatting</p>
         </div>
 
         {/* Signup Form */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 animate-slide-up">
+        <div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 animate-slide-up border border-gray-700">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Display Name Input */}
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="displayName" className="block text-sm font-medium text-gray-300 mb-2">
                 Full Name
               </label>
               <div className="relative">
@@ -146,7 +146,7 @@ const Signup = () => {
                   required
                   value={formData.displayName}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border ${errors.displayName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors`}
+                  className={`block w-full pl-10 pr-3 py-3 bg-gray-700 border ${errors.displayName ? 'border-red-500' : 'border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-white placeholder-gray-400`}
                   placeholder="John Doe"
                   disabled={loading}
                 />
@@ -181,7 +181,7 @@ const Signup = () => {
 
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email Address
               </label>
               <div className="relative">
@@ -195,7 +195,7 @@ const Signup = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors`}
+                  className={`block w-full pl-10 pr-3 py-3 bg-gray-700 border ${errors.email ? 'border-red-500' : 'border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-white placeholder-gray-400`}
                   placeholder="you@example.com"
                   disabled={loading}
                 />
@@ -207,7 +207,7 @@ const Signup = () => {
 
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -221,7 +221,7 @@ const Signup = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-12 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors`}
+                  className={`block w-full pl-10 pr-12 py-3 bg-gray-700 border ${errors.password ? 'border-red-500' : 'border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-white placeholder-gray-400`}
                   placeholder="••••••••"
                   disabled={loading}
                 />
@@ -244,7 +244,7 @@ const Signup = () => {
 
             {/* Confirm Password Input */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -258,7 +258,7 @@ const Signup = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-12 py-3 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors`}
+                  className={`block w-full pl-10 pr-12 py-3 bg-gray-700 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-600'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-white placeholder-gray-400`}
                   placeholder="••••••••"
                   disabled={loading}
                 />
@@ -283,7 +283,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg mt-6"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg mt-6"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -302,10 +302,10 @@ const Signup = () => {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-gray-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
             </div>
           </div>
 
@@ -314,18 +314,18 @@ const Signup = () => {
             type="button"
             onClick={handleGoogleSignup}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="w-full flex items-center justify-center gap-3 bg-gray-700 border border-gray-600 text-white py-3 rounded-lg font-medium hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <FcGoogle className="w-5 h-5" />
             Sign up with Google
           </button>
 
           {/* Login Link */}
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-gray-400">
             Already have an account?{' '}
             <Link 
               to="/login" 
-              className="font-medium text-purple-600 hover:text-purple-500 transition-colors"
+              className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
             >
               Sign in
             </Link>
@@ -333,7 +333,7 @@ const Signup = () => {
         </div>
 
         {/* Footer */}
-        <p className="mt-8 text-center text-sm text-pink-100">
+        <p className="mt-8 text-center text-sm text-blue-200">
           © 2025 ChatApp. Real-time communication made simple.
         </p>
       </div>
