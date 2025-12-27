@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useChat } from '../context/ChatContext'
 import { HiX, HiKey, HiSearch } from 'react-icons/hi'
+import { toast } from 'react-toastify'
 
 const JoinRoomModal = ({ onClose }) => {
   const [inviteCode, setInviteCode] = useState('')
@@ -59,6 +60,7 @@ const JoinRoomModal = ({ onClose }) => {
       onClose()
     } catch (error) {
       console.error('Failed to join room:', error)
+      // Error already handled by joinRoomWithCode
     } finally {
       setLoading(false)
     }
