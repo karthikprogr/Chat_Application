@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useChat } from '../context/ChatContext'
 import { useAuth } from '../context/AuthContext'
 import { HiPaperAirplane, HiEmojiHappy, HiLockClosed } from 'react-icons/hi'
+import { MdFormatBold, MdFormatItalic } from 'react-icons/md'
 import EmojiPicker from './EmojiPicker'
 
 const MessageInput = () => {
@@ -130,8 +131,34 @@ const MessageInput = () => {
 
   return (
     <div className="border-t border-gray-800 bg-gray-900 p-4">
-      <form onSubmit={handleSubmit} className="flex items-center gap-3">
-        <div className="flex-1 relative" ref={emojiPickerRef}>
+      <form onSubmit={handleSubmit} className="space-y-2">
+        {/* Formatting toolbar */}
+        <div className="flex items-center gap-2 px-2">
+          <button
+            type="button"
+            onClick={() => insertFormatting('bold')}
+            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+            title="Bold (**text**)"
+          >
+            <MdFormatBold className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => insertFormatting('italic')}
+            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+            title="Italic (*text*)"
+          >
+            <MdFormatItalic className="w-5 h-5" />
+          </button>
+          <div className="flex-1" />
+          <span className="text-xs text-gray-500">
+            Use **bold** or *italic* for formatting
+          </span>
+        </div>
+
+        {/* Input area */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 relative" ref={emojiPickerRef}>
           <textarea
             ref={inputRef}
             value={message}
@@ -176,6 +203,7 @@ const MessageInput = () => {
             <HiPaperAirplane className="w-5 h-5 transform rotate-90" />
           )}
         </button>
+        </div>
       </form>
     </div>
   )

@@ -21,6 +21,7 @@ import {
 import { db } from '../firebase/config'
 import { useAuth } from './AuthContext'
 import { toast } from 'react-toastify'
+import { showNotification, playNotificationSound, updatePageTitle, requestNotificationPermission } from '../utils/notifications'
 
 const ChatContext = createContext()
 
@@ -50,6 +51,19 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     currentRoomRef.current = currentRoom?.id || null
   }, [currentRoom])
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if (currentUser) {
+      requestNotificationPermission()
+    }
+  }, [currentUser])
+
+  // Update page title with total unread count
+  useEffect(() => {
+    const totalUnread = rooms.reduce((sum, room) => sum + (room.unreadCount || 0), 0)
+    updatePageTitle(totalUnread)
+  }, [rooms])
 
   // Load chat rooms (only rooms where user is a member)
   useEffect(() => {
@@ -169,11 +183,34 @@ export const ChatProvider = ({ children }) => {
     const q = query(messagesRef, orderBy('createdAt', 'asc'))
 
     let firstLoad = true
+    let previousMessageCount = 0
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const messagesData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }))
+      
+      // Show notification for new messages (only after first load)
+      if (!firstLoad && messagesData.length > previousMessageCount) {
+        const newMessages = messagesData.slice(previousMessageCount)
+        newMessages.forEach(msg => {
+          // Don't notify for own messages
+          if (msg.userId !== currentUser.uid) {
+            const room = rooms.find(r => r.id === currentRoomId)
+            showNotification(
+              `New message in ${room?.name || 'chat'}`,
+              {
+                body: `${msg.userName}: ${msg.text?.substring(0, 50)}${msg.text?.length > 50 ? '...' : ''}`,
+                tag: currentRoomId // Prevent duplicate notifications for same room
+              }
+            )
+            playNotificationSound()
+          }
+        })
+      }
+      
+      previousMessageCount = messagesData.length
       setMessages(messagesData)
       
       // Turn off loading only after first snapshot
