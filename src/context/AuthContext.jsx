@@ -36,14 +36,26 @@ export const AuthProvider = ({ children }) => {
       return { available: false, message: 'Username must be at least 3 characters' }
     }
 
-    const usersRef = collection(db, 'users')
-    const q = query(usersRef, where('displayName', '==', username.trim()))
-    const snapshot = await getDocs(q)
-    
-    if (snapshot.empty) {
-      return { available: true, message: 'Username is available' }
-    } else {
-      return { available: false, message: 'Username is already taken' }
+    try {
+      const usersRef = collection(db, 'users')
+      const q = query(usersRef, where('displayName', '==', username.trim()))
+      const snapshot = await getDocs(q)
+      
+      if (snapshot.empty) {
+        return { available: true, message: 'Username is available' }
+      } else {
+        return { available: false, message: 'Username is already taken' }
+      }
+    } catch (error) {
+      // Some rule sets block reading users before auth; do not block signup for that.
+      if (error?.code === 'permission-denied' || error?.code === 'firestore/permission-denied') {
+        return {
+          available: null,
+          message: 'Username check unavailable right now. You can continue signup.'
+        }
+      }
+
+      throw error
     }
   }
 
@@ -90,7 +102,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Check username availability first
       const usernameCheck = await checkUsernameAvailable(displayName)
-      if (!usernameCheck.available) {
+      if (usernameCheck.available === false) {
         toast.error(usernameCheck.message)
         throw new Error(usernameCheck.message)
       }

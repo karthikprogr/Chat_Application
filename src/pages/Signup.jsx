@@ -173,7 +173,7 @@ const Signup = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.displayName}</p>
               )}
               {usernameStatus.message && (
-                <p className={`mt-1 text-sm ${usernameStatus.available ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`mt-1 text-sm ${usernameStatus.available === true ? 'text-green-600' : usernameStatus.available === false ? 'text-red-600' : 'text-gray-400'}`}>
                   {usernameStatus.message}
                 </p>
               )}
